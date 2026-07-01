@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Manajemen Revisi{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-pen-alt"></i> History Revisi</h1>
+</div>
+
+{% if revisions %}
+<div class="table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Tanggal</th>
+                <th>Project</th>
+                <th>Revisi Ke-</th>
+                <th>Catatan</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in revisions %}
+            <tr>
+                <td>{{ r['tanggal'] }}</td>
+                <td class="fw-600">{{ r['nama_project'] }}</td>
+                <td>{{ r['revisi_ke'] }}</td>
+                <td>{{ r['catatan'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-pen-alt"></i>
+    <p>Tidak ada riwayat revisi.</p>
+</div>
+{% endif %}
+{% endblock %}

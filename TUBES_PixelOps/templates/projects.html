@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Semua Project{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-folder-open"></i> All Projects</h1>
+</div>
+
+<div class="filter-bar">
+    <div class="filter-group">
+        <label>Status</label>
+        <select id="filterStatus" class="form-select" onchange="filterProjects()">
+            <option value="">Semua</option>
+            <option value="progres">Progres</option>
+            <option value="revisi">Revisi</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Tipe</label>
+        <select id="filterJenis" class="form-select" onchange="filterProjects()">
+            <option value="">Semua Tipe</option>
+            {% set jenis_set = [] %}
+            {% for p in projects %}
+            {% if p['jenis'] not in jenis_set %}{% set _ = jenis_set.append(p['jenis']) %}{% endif %}
+            {% endfor %}
+            {% for j in jenis_set %}
+            <option value="{{ j|lower }}">{{ j }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filter-group">
+        <label>Deadline</label>
+        <select id="filterDeadline" class="form-select" onchange="filterProjects()">
+            <option value="">Semua</option>
+            <option value="overdue">Terlewat</option>
+            <option value="nearest">Terdekat</option>
+            <option value="week">Minggu Ini</option>
+            <option value="month">Bulan Ini</option>
+            <option value="future">Mendatang</option>
+        </select>
+    </div>
+</div>
+
+{% if projects %}
+<div class="projects-grid">
+    {% for p in projects %}
+    {% include "_project_card.html" %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-folder-open"></i>
+    <p>Belum ada project. <a href="{{ url_for('add_project') }}">Tambah project baru</a></p>
+</div>
+{% endif %}
+
+<!-- Revision Modal -->
+<div id="revisionModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-pen-alt"></i> <span id="revisionProjectName">Tambah Revisi</span></h3>
+            <button class="modal-close" onclick="closeRevisionModal()">&times;</button>
+        </div>
+        <form id="revisionForm" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="catatan">Catatan Revisi</label>
+                    <textarea id="catatan" name="catatan" rows="4" placeholder="Deskripsikan revisi yang diperlukan..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeRevisionModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Simpan Revisi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-credit-card"></i> <span id="paymentProjectName">Buat Tagihan</span></h3>
+            <button class="modal-close" onclick="closePaymentModal()">&times;</button>
+        </div>
+        <form id="paymentForm" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="total_tagihan">
+                        Total Tagihan (Rp)
+                        <span class="field-hint">Isi total keseluruhan biaya project</span>
+                    </label>
+                    <input type="hidden" name="total" id="total_tagihan" value="0" />
+                    <input type="text" id="total_tagihan_display" class="form-input"
+                           placeholder="0.000" value="0"
+                           oninput="formatNumber(this, 'total_tagihan')" />
+                    <span class="budget-hint" id="budgetHint">Budget Project: <strong>Rp 0</strong></span>
+                </div>
+                <div class="form-group">
+                    <label for="dp_dibayar">DP Dibayar (Rp)</label>
+                    <input type="hidden" name="dp" id="dp_dibayar" value="0" />
+                    <input type="text" id="dp_dibayar_display" class="form-input"
+                           placeholder="0.000" value="0"
+                           oninput="formatNumber(this, 'dp_dibayar')" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Buat Tagihan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openRevisionModal(id, project) {
+    document.getElementById('revisionModal').classList.add('active');
+    document.getElementById('revisionProjectName').textContent = project;
+    document.getElementById('revisionForm').action = '/projects/' + id + '/revision';
+}
+
+function closeRevisionModal() {
+    document.getElementById('revisionModal').classList.remove('active');
+}
+
+function openPaymentModal(id, project, budget) {
+    document.getElementById('paymentModal').classList.add('active');
+    document.getElementById('paymentProjectName').textContent = project;
+    const bgt = budget || 0;
+    const h = document.getElementById('total_tagihan');
+    const d = document.getElementById('total_tagihan_display');
+    h.value = bgt;
+    d.value = Number(bgt).toLocaleString('id-ID');
+    document.getElementById('budgetHint').innerHTML = 'Budget Project: <strong>Rp ' + Number(bgt).toLocaleString('id-ID') + '</strong>';
+    document.getElementById('paymentForm').action = '/projects/' + id + '/payment';
+}
+
+function closePaymentModal() {
+    document.getElementById('paymentModal').classList.remove('active');
+}
+
+// Close modals when clicking outside
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+});
+
+function formatNumber(el, hiddenId) {
+    let raw = el.value.replace(/\D/g, '');
+    document.getElementById(hiddenId).value = raw || '0';
+    el.value = raw ? Number(raw).toLocaleString('id-ID') : '0';
+}
+
+document.getElementById('paymentForm')?.addEventListener('submit', function() {
+    ['total_tagihan', 'dp_dibayar'].forEach(id => {
+        const disp = document.getElementById(id + '_display');
+        if (disp) formatNumber(disp, id);
+    });
+});
+
+function filterProjects() {
+    const status = document.getElementById('filterStatus').value.toLowerCase();
+    const jenis = document.getElementById('filterJenis').value.toLowerCase();
+    const deadline = document.getElementById('filterDeadline').value;
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    document.querySelectorAll('.project-card').forEach(card => {
+        const s = card.querySelector('.status-badge')?.textContent?.trim().toLowerCase() || '';
+        const j = card.querySelector('.project-detail:nth-child(2) span')?.textContent?.replace('Type:','').trim().toLowerCase() || '';
+        const dlText = card.querySelector('.project-detail:nth-child(3) span')?.textContent?.replace('Deadline:','').trim() || '';
+
+        let show = true;
+        if (status && s !== status) show = false;
+        if (jenis && !j.includes(jenis)) show = false;
+
+        if (deadline === 'nearest') {
+            // handled via sort below, just show all non-overdue
+            const dl = new Date(dlText); dl.setHours(0,0,0,0);
+            if (dl < today) show = false;
+        }
+        else if (deadline && dlText) {
+            const dl = new Date(dlText); dl.setHours(0,0,0,0);
+            if (deadline === 'overdue' && dl >= today) show = false;
+            else if (deadline === 'week') {
+                const end = new Date(today); end.setDate(end.getDate() + (7 - end.getDay()));
+                if (dl < today || dl > end) show = false;
+            }
+            else if (deadline === 'month') {
+                if (dl.getMonth() !== today.getMonth() || dl.getFullYear() !== today.getFullYear()) show = false;
+            }
+            else if (deadline === 'future' && dl <= today) show = false;
+        }
+
+        card.style.display = show ? '' : 'none';
+    });
+
+    // sort by nearest deadline
+    if (deadline === 'nearest') {
+        const grid = document.querySelector('.projects-grid');
+        const cards = [...grid.querySelectorAll('.project-card')].filter(c => c.style.display !== 'none');
+        cards.sort((a, b) => {
+            const da = new Date(a.querySelector('.project-detail:nth-child(3) span')?.textContent?.replace('Deadline:','').trim() || '9999-12-31');
+            const db = new Date(b.querySelector('.project-detail:nth-child(3) span')?.textContent?.replace('Deadline:','').trim() || '9999-12-31');
+            return da - db;
+        });
+        cards.forEach(c => grid.appendChild(c));
+    }
+}
+</script>
+{% endblock %}

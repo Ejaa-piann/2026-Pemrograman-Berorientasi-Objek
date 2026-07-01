@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-chart-pie"></i> Dashboard Overview</h1>
+</div>
+
+<!-- Metric Cards -->
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon" style="background: linear-gradient(135deg, #3B82F6, #1D4ED8);">
+            <i class="fas fa-project-diagram"></i>
+        </div>
+        <div class="metric-info">
+            <span class="metric-label">Total Project</span>
+            <span class="metric-value">{{ total }}</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon" style="background: linear-gradient(135deg, #8B5CF6, #6D28D9);">
+            <i class="fas fa-spinner"></i>
+        </div>
+        <div class="metric-info">
+            <span class="metric-label">Progres</span>
+            <span class="metric-value accent-blue">{{ progress }}</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon" style="background: linear-gradient(135deg, #F59E0B, #D97706);">
+            <i class="fas fa-pen-alt"></i>
+        </div>
+        <div class="metric-info">
+            <span class="metric-label">Revisi</span>
+            <span class="metric-value accent-amber">{{ revisi }}</span>
+        </div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon" style="background: linear-gradient(135deg, #10B981, #059669);">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="metric-info">
+            <span class="metric-label">Selesai</span>
+            <span class="metric-value accent-green">{{ selesai }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Finance Cards -->
+<div class="finance-grid">
+    <div class="finance-card revenue-card">
+        <div class="finance-header">
+            <span class="finance-title"><i class="fas fa-wallet"></i> Pendapatan Masuk</span>
+        </div>
+        <div class="finance-amount">{{ revenue|format_rp }}</div>
+        <div class="finance-stats">
+            <div class="stat-item">
+                <span class="stat-value green">{{ pay_stats.get('Lunas', 0) }}</span>
+                <span class="stat-label">Lunas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" style="color: var(--text-muted);">{{ total_tagihan|format_rp }}</span>
+                <span class="stat-label">Total Tagihan</span>
+            </div>
+        </div>
+    </div>
+    <div class="finance-card piutang-card">
+        <div class="finance-header">
+            <span class="finance-title"><i class="fas fa-clock"></i> Menunggu Pelunasan</span>
+        </div>
+        <div class="finance-amount danger">{{ piutang|format_rp }}</div>
+        <div class="finance-stats">
+            <div class="stat-item">
+                <span class="stat-value green">{{ pay_stats.get('Lunas', 0) }}</span>
+                <span class="stat-label">Lunas</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value amber">{{ pay_stats.get('DP', 0) }}</span>
+                <span class="stat-label">Dicicil (DP)</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value red">{{ pay_stats.get('Belum Bayar', 0) }}</span>
+                <span class="stat-label">Belum</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-divider"></div>
+
+<!-- Deadline Countdown -->
+<section class="content-section">
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <h2 style="margin: 0;"><i class="fas fa-calendar-alt"></i> Kalender Deadline</h2>
+        <div class="calendar-legend" style="display: flex; gap: 12px; font-size: 0.85rem;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, #EF4444, #F87171);"></div>
+                <span style="color: var(--text-muted);">Terlewat</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, #F59E0B, #FBBF24);"></div>
+                <span style="color: var(--text-muted);">Dekat (&le; 3 hari)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+                <div style="width: 12px; height: 12px; border-radius: 4px; background: linear-gradient(135deg, #10B981, #34D399);"></div>
+                <span style="color: var(--text-muted);">Aman</span>
+            </div>
+        </div>
+    </div>
+    <div id="deadline-warning" class="deadline-warning"></div>
+    <div id="calendar" class="calendar-widget"></div>
+</section>
+
+<div class="content-divider"></div>
+
+<!-- Recent Projects -->
+<section class="content-section">
+    <div class="section-header">
+        <h2><i class="fas fa-list"></i> Recent Projects</h2>
+    </div>
+    {% if recent %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Nama Project</th>
+                    <th>Klien</th>
+                    <th>Desainer</th>
+                    <th>Tipe</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in recent %}
+                <tr>
+                    <td class="fw-600">{{ p['nama_project'] }}</td>
+                    <td>{{ p.get('client_nama', '-') }}</td>
+                    <td>{{ p.get('designer_nama', '-') }}</td>
+                    <td>{{ p['jenis'] }}</td>
+                    <td>
+                        <span class="status-badge status-{{ p['status'] | lower }}">{{ p['status'] }}</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>Belum ada project yang sedang berjalan.</p>
+    </div>
+    {% endif %}
+</section>
+
+<script>
+window.__deadlineProjects = {{ projects_json|safe }};
+</script>
+<script src="{{ url_for('static', filename='js/calendar.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,53 @@
+<div class="project-card status-{{ p['status'] | lower }}" data-project-id="{{ p['id'] }}">
+    <div class="card-content">
+    <div class="project-card-header">
+        <h3>{{ p['nama_project'] }}</h3>
+        <span class="status-badge status-{{ p['status'] | lower }}">{{ p['status'] }}</span>
+    </div>
+    <div class="project-card-body">
+        <div class="project-detail">
+            <i class="fas fa-user"></i>
+            <span><strong>Client:</strong> {{ p.get('client_nama', '-') }}</span>
+        </div>
+        <div class="project-detail">
+            <i class="fas fa-paint-brush"></i>
+            <span><strong>Type:</strong> {{ p['jenis'] }}</span>
+        </div>
+        <div class="project-detail">
+            <i class="fas fa-calendar"></i>
+            <span><strong>Deadline:</strong> {{ p['deadline'] }}</span>
+        </div>
+        <div class="project-detail">
+            <i class="fas fa-tag"></i>
+            <span><strong>Budget:</strong> {{ p['budget']|format_rp }}</span>
+        </div>
+        <div class="project-desc">
+            <i class="fas fa-file-alt"></i>
+            <span>{{ p.get('deskripsi') or '—' }}</span>
+        </div>
+    </div>
+    <div class="project-card-actions">
+        {% if p['status']|lower != 'selesai' %}
+        <form action="{{ url_for('complete_project', project_id=p['id']) }}" method="POST" class="inline-form">
+            <button type="submit" class="btn btn-sm btn-success" title="Tandai Selesai">
+                <i class="fas fa-check"></i> Selesai
+            </button>
+        </form>
+        <button class="btn btn-sm btn-warning" onclick="openRevisionModal({{ p['id'] }}, '{{ p['nama_project'] }}')" title="Tambah Revisi">
+            <i class="fas fa-pen"></i> Revisi
+        </button>
+        <button class="btn btn-sm btn-info" onclick="openPaymentModal({{ p['id'] }}, '{{ p['nama_project'] }}', {{ p.get('budget', 0)|default(0)|int }})" title="Buat Tagihan">
+            <i class="fas fa-credit-card"></i> Tagihan
+        </button>
+        {% endif %}
+        <a href="{{ url_for('edit_project', project_id=p['id']) }}" class="btn btn-sm btn-secondary" title="Edit Project">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <form action="{{ url_for('delete_project', project_id=p['id']) }}" method="POST" class="inline-form" onsubmit="return confirm('Yakin ingin menghapus project ini?')">
+            <button type="submit" class="btn btn-sm btn-danger" title="Hapus Project">
+                <i class="fas fa-trash"></i> Hapus
+            </button>
+        </form>
+    </div>
+    </div> <!-- end card-content -->
+</div>

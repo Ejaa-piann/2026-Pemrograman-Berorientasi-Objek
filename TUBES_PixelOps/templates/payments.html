@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Tagihan & Keuangan{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-credit-card"></i> Manajemen Pembayaran</h1>
+</div>
+
+<div class="filter-bar">
+    <div class="filter-group">
+        <label>Status Pembayaran</label>
+        <select id="filterPayStatus" class="form-select" onchange="filterPayments()">
+            <option value="">Semua</option>
+            <option value="lunas">Lunas</option>
+            <option value="dp">DP</option>
+            <option value="belum bayar">Belum Bayar</option>
+        </select>
+    </div>
+</div>
+
+{% if payments %}
+<div class="projects-grid">
+    {% for pay in payments %}
+    <div class="project-card">
+        <div class="project-card-header">
+            <h3>{{ pay['nama_project'] }}</h3>
+            <span class="status-badge status-{{ pay['status'] | lower | replace(' ', '_') }}">{{ pay['status'] }}</span>
+        </div>
+        <div class="project-card-body">
+            <div class="budget-ref" style="margin-bottom:8px;">Budget Project: <strong>{{ pay['budget']|format_rp }}</strong></div>
+            <div class="project-detail">
+                <i class="fas fa-tag"></i>
+                <span><strong>Total Tagihan:</strong> {{ pay['total']|format_rp }}</span>
+            </div>
+            <div class="project-detail">
+                <i class="fas fa-credit-card"></i>
+                <span><strong>DP / Dibayar:</strong> {{ pay['dp']|format_rp }}</span>
+            </div>
+            <div class="project-detail">
+                <i class="fas fa-hourglass-half"></i>
+                <span><strong>Sisa:</strong> <span class="{% if pay['sisa'] > 0 %}text-danger{% else %}text-green{% endif %}">{{ pay['sisa']|format_rp }}</span></span>
+            </div>
+        </div>
+        <div class="project-card-actions">
+            {% if pay['sisa'] > 0 %}
+            <button class="btn btn-primary btn-sm" onclick="openPayModal({{ pay['id'] }}, '{{ pay['nama_project'] }}', {{ pay['sisa'] }}, {{ pay['budget']|default(0)|int }})">
+                <i class="fas fa-credit-card"></i> Bayar Sisa ({{ pay['sisa']|format_rp }})
+            </button>
+            {% else %}
+            <span class="badge badge-success"><i class="fas fa-check-circle"></i> Lunas</span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-credit-card"></i>
+    <p>Belum ada data pembayaran.</p>
+</div>
+{% endif %}
+
+<!-- Pay Modal -->
+<div id="payModal" class="modal-overlay">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-credit-card"></i> Bayar Tagihan: <span id="payProjectName"></span></h3>
+            <button class="modal-close" onclick="closePayModal()">&times;</button>
+        </div>
+        <form id="payForm" method="POST">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Sisa Tagihan</label>
+                    <p class="sisa-amount" id="sisaAmount"></p>
+                    <span class="budget-hint" id="payBudgetHint">Budget Project: <strong>Rp 0</strong></span>
+                </div>
+                <div class="form-group">
+                    <label for="bayar">Jumlah Bayar (Rp)</label>
+                    <input type="hidden" name="bayar" id="bayar" value="0" />
+                    <input type="text" id="bayar_display" class="form-input"
+                           placeholder="0.000" value=""
+                           oninput="formatNumber(this, 'bayar')" />
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePayModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Konfirmasi Pembayaran</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+function openPayModal(id, project, sisa, budget) {
+    document.getElementById('payModal').classList.add('active');
+    document.getElementById('payProjectName').textContent = project;
+    document.getElementById('sisaAmount').textContent = 'Rp ' + Number(sisa).toLocaleString('id-ID');
+    document.getElementById('payBudgetHint').innerHTML = 'Budget Project: <strong>Rp ' + Number(budget || 0).toLocaleString('id-ID') + '</strong>';
+    document.getElementById('payForm').action = '/payments/' + id + '/pay';
+}
+
+function closePayModal() {
+    document.getElementById('payModal').classList.remove('active');
+}
+
+// Close modals when clicking outside
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+});
+
+function formatNumber(el, hiddenId) {
+    let raw = el.value.replace(/\D/g, '');
+    document.getElementById(hiddenId).value = raw || '0';
+    el.value = raw ? Number(raw).toLocaleString('id-ID') : '0';
+}
+
+document.getElementById('payForm')?.addEventListener('submit', function() {
+    const disp = document.getElementById('bayar_display');
+    if (disp) formatNumber(disp, 'bayar');
+});
+
+function filterPayments() {
+    const status = document.getElementById('filterPayStatus').value.toLowerCase();
+    document.querySelectorAll('.project-card').forEach(card => {
+        const s = card.querySelector('.status-badge')?.textContent?.trim().toLowerCase() || '';
+        card.style.display = !status || s === status ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

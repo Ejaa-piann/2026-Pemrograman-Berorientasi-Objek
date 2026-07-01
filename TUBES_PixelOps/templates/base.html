@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="PixelOps - Studio Management System untuk mengelola workflow desain, klien, dan keuangan studio dengan mudah." />
+    <title>PixelOps - {% block title %}Dashboard{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-icon">🎨</span>
+                    <div class="brand-text">
+                        <h1>PixelOps</h1>
+                        <span class="brand-subtitle">Studio Management</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <ul>
+                    <li>
+                        <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('project_list') }}" class="nav-item {% if request.endpoint == 'project_list' %}active{% endif %}">
+                            <i class="fas fa-folder-open"></i>
+                            <span>Semua Project</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('archived_list') }}" class="nav-item {% if request.endpoint == 'archived_list' %}active{% endif %}">
+                            <i class="fas fa-archive"></i>
+                            <span>Arsip Project</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('add_project') }}" class="nav-item {% if request.endpoint == 'add_project' %}active{% endif %}">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Tambah Project</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('revision_list') }}" class="nav-item {% if request.endpoint == 'revision_list' %}active{% endif %}">
+                            <i class="fas fa-pen-alt"></i>
+                            <span>Manajemen Revisi</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('clients_designers') }}" class="nav-item {% if request.endpoint == 'clients_designers' %}active{% endif %}">
+                            <i class="fas fa-users"></i>
+                            <span>Klien &amp; Desainer</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('payment_list') }}" class="nav-item {% if request.endpoint == 'payment_list' %}active{% endif %}">
+                            <i class="fas fa-credit-card"></i>
+                            <span>Tagihan &amp; Keuangan</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <a href="{{ url_for('export_excel') }}" class="btn-export">
+                    <i class="fas fa-file-excel"></i>
+                    <span>Export to Excel</span>
+                </a>
+                <div class="sidebar-info">
+                    <i class="fas fa-rocket"></i>
+                    <span>Kelola workflow studiomu dengan mudah</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Toggle button for mobile -->
+        <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="main-content-header">
+                <button class="theme-toggle-top" id="themeToggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-container">
+                        {% for category, message in messages %}
+                            <div class="flash-message flash-{{ category }}" role="alert">
+                                <span>{{ message }}</span>
+                                <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        (function() {
+            const saved = localStorage.getItem('pixelops-theme');
+            if (saved === 'light') {
+                document.documentElement.dataset.theme = 'light';
+            }
+        })();
+        function toggleTheme() {
+            const html = document.documentElement;
+            const next = html.dataset.theme === 'light' ? '' : 'light';
+            html.dataset.theme = next;
+            localStorage.setItem('pixelops-theme', next || 'dark');
+        }
+    </script>
+</body>
+</html>

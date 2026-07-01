@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Tambah Project{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas {{ 'fa-edit' if project else 'fa-plus-circle' }}"></i> {{ 'Edit Project' if project else 'Tambah Project Baru' }}</h1>
+    <p class="page-subtitle">{{ 'Perbarui detail project' if project else 'Lengkapi detail project untuk memulai kolaborasi' }}</p>
+</div>
+
+<div class="form-container">
+    <form action="{{ url_for('edit_project', project_id=project['id']) if project else url_for('add_project') }}" method="POST" class="project-form">
+
+        <!-- 2-Column: Identitas Project (60%) + Tim & Klien (40%) -->
+        <div class="form-grid-2col">
+
+            <!-- Left: Identitas Project -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-icon"><i class="fas fa-tag"></i></div>
+                    <div>
+                        <h3>Identitas Project</h3>
+                        <p>Informasi dasar project</p>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-group">
+                        <label for="nama">
+                            <i class="fas fa-pen-fancy"></i> Nama Project <span class="required">*</span>
+                        </label>
+                        <input type="text" id="nama" name="nama" placeholder="cth: Rebranding Aplikasi Gojek"
+                               value="{{ project['nama_project'] if project else '' }}" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="deskripsi">
+                            <i class="fas fa-file-alt"></i> Deskripsi Project
+                        </label>
+                        <textarea id="deskripsi" name="deskripsi" rows="3" placeholder="Ceritakan sedikit tentang project ini...">{{ project['deskripsi'] if project else '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Tim & Klien -->
+            <div class="form-card">
+                <div class="form-card-header">
+                    <div class="form-card-icon"><i class="fas fa-users"></i></div>
+                    <div>
+                        <h3>Tim & Klien</h3>
+                        <p>Pilih atau daftarkan klien dan desainer</p>
+                    </div>
+                </div>
+                <div class="form-card-body">
+                    <div class="form-group">
+                        <label>
+                            <i class="fas fa-user-tie"></i> Pilih Klien <span class="required">*</span>
+                        </label>
+                        {% if not project %}
+                        <div class="radio-card-group">
+                            <label class="radio-card" onclick="toggleClientMode('existing')">
+                                <input type="radio" name="client_mode" value="existing" checked />
+                                <div class="radio-card-content">
+                                    <i class="fas fa-database"></i>
+                                    <span>Dari Database</span>
+                                </div>
+                            </label>
+                            <label class="radio-card" onclick="toggleClientMode('new')">
+                                <input type="radio" name="client_mode" value="new" />
+                                <div class="radio-card-content">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <span>Buat Baru</span>
+                                </div>
+                            </label>
+                        </div>
+                        {% endif %}
+                        <div id="clientExisting">
+                            {% if clients %}
+                            <select name="client_id" class="form-select">
+                                <option value="">— Pilih Klien —</option>
+                                {% for c in clients %}
+                                <option value="{{ c['id'] }}" {{ 'selected' if project and project['client_id'] == c['id'] else '' }}>{{ c['nama'] }}</option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Belum ada klien, silakan buat baru.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div id="clientNew" class="client-new-fields" style="display:none;">
+                        <input type="text" name="c_nama_baru" placeholder="Nama Klien Baru" class="form-input" />
+                        <input type="text" name="c_perusahaan" placeholder="Perusahaan" class="form-input" />
+                        <input type="text" name="c_email" placeholder="Email" class="form-input" />
+                        <input type="text" name="c_telepon" placeholder="Telepon" class="form-input" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="designer_id">
+                            <i class="fas fa-paint-brush"></i> Pilih Desainer <span class="required">*</span>
+                        </label>
+                        {% if designers %}
+                        <select name="designer_id" id="designer_id" class="form-select" required>
+                            <option value="">— Pilih Desainer —</option>
+                            {% for d in designers %}
+                            <option value="{{ d['id'] }}" {{ 'selected' if project and project['designer_id'] == d['id'] else '' }}>
+                                {{ d['nama'] }}{% if d.get('spesialis') %} — {{ d['spesialis'] }}{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        {% else %}
+                        <p class="text-warning"><i class="fas fa-exclamation-triangle"></i> Belum ada desainer. Tambah desainer dulu.</p>
+                        {% endif %}
+                    </div>
+                </div> <!-- end .form-card-body -->
+            </div> <!-- end .form-card Tim & Klien -->
+
+        </div>
+
+        <!-- Section: Detail Project (Full Width) -->
+        <div class="form-card">
+            <div class="form-card-header">
+                <div class="form-card-icon"><i class="fas fa-cog"></i></div>
+                <div>
+                    <h3>Detail Project</h3>
+                    <p>Tipe, deadline, dan budget</p>
+                </div>
+            </div>
+            <div class="form-card-body">
+                <div class="form-row three-col">
+                    <div class="form-group">
+                        <label for="jenis">
+                            <i class="fas fa-th-large"></i> Jenis Project
+                        </label>
+                        <select name="jenis" id="jenis" class="form-select">
+                            <option value="Logo Design" {{ 'selected' if project and project['jenis'] == 'Logo Design' else '' }}>Logo Design</option>
+                            <option value="Branding" {{ 'selected' if project and project['jenis'] == 'Branding' else '' }}>Branding</option>
+                            <option value="UI/UX Design" {{ 'selected' if project and project['jenis'] == 'UI/UX Design' else '' }}>UI/UX Design</option>
+                            <option value="Poster" {{ 'selected' if project and project['jenis'] == 'Poster' else '' }}>Poster</option>
+                            <option value="Social Media" {{ 'selected' if project and project['jenis'] == 'Social Media' else '' }}>Social Media</option>
+                            <option value="Illustration" {{ 'selected' if project and project['jenis'] == 'Illustration' else '' }}>Illustration</option>
+                            <option value="Other" {{ 'selected' if project and project['jenis'] == 'Other' else '' }}>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="deadline">
+                            <i class="fas fa-calendar-alt"></i> Deadline
+                        </label>
+                        <input type="date" id="deadline" name="deadline" value="{{ project['deadline'] if project else today }}" class="form-input" />
+                    </div>
+                    <div class="form-group">
+                        <label for="budget_display">
+                            <i class="fas fa-coins"></i> Budget (Rp)
+                        </label>
+                        <input type="hidden" name="budget" id="budget" value="{{ '%0.f'|format(project['budget']) if project else '0' }}" />
+                        <input type="text" id="budget_display" class="form-input"
+                               placeholder="0.000" value="{{ '{:,.0f}'.format(project['budget']).replace(',','.') if project else '0' }}"
+                               oninput="formatBudget(this)" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="form-actions">
+            <a href="{{ url_for('project_list') }}" class="btn btn-secondary btn-lg">
+                <i class="fas fa-arrow-left"></i> Batal
+            </a>
+            <button type="submit" class="btn btn-primary btn-lg btn-glow">
+                <i class="fas {{ 'fa-save' if project else 'fa-rocket' }}"></i> {{ 'Simpan Perubahan' if project else 'Simpan Project' }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function toggleClientMode(mode) {
+    document.querySelectorAll('input[name="client_mode"]').forEach(r => {
+        r.checked = r.value === mode;
+    });
+    document.getElementById('clientExisting').style.display = mode === 'existing' ? 'block' : 'none';
+    document.getElementById('clientNew').style.display = mode === 'new' ? 'block' : 'none';
+}
+
+function formatBudget(el) {
+    let raw = el.value.replace(/\D/g, '');
+    document.getElementById('budget').value = raw || '0';
+    el.value = raw ? Number(raw).toLocaleString('id-ID') : '0';
+}
+
+document.querySelector('.project-form')?.addEventListener('submit', function() {
+    const display = document.getElementById('budget_display');
+    if (display) formatBudget(display);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Klien & Desainer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-users"></i> Manajemen Tim & Klien</h1>
+</div>
+
+<div class="tabs-container">
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="clients" onclick="switchTab('clients')">
+            <i class="fas fa-user-tie"></i> Klien
+        </button>
+        <button class="tab-btn" data-tab="designers" onclick="switchTab('designers')">
+            <i class="fas fa-paint-brush"></i> Desainer
+        </button>
+    </div>
+
+    <!-- Clients Tab -->
+    <div id="tab-clients" class="tab-content active">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Daftar Klien</h2>
+            <button class="btn btn-primary" onclick="openModal('clientModal')"><i class="fas fa-plus"></i> Tambah Klien</button>
+        </div>
+        {% if clients %}
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nama</th>
+                        <th>Perusahaan</th>
+                        <th>Email</th>
+                        <th>Telepon</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in clients %}
+                    <tr>
+                        <td>{{ c['id'] }}</td>
+                        <td class="fw-600">{{ c['nama'] }}</td>
+                        <td>{{ c.get('perusahaan', '-') }}</td>
+                        <td>{{ c.get('email', '-') }}</td>
+                        <td>{{ c.get('telepon', '-') }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_client', client_id=c['id']) }}" method="POST" onsubmit="return confirm('Hapus klien {{ c['nama'] }}?')">
+                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-user-tie"></i>
+            <p>Belum ada klien.</p>
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- Designers Tab -->
+    <div id="tab-designers" class="tab-content">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Daftar Desainer</h2>
+            <button class="btn btn-primary" onclick="openModal('designerModal')"><i class="fas fa-plus"></i> Tambah Desainer</button>
+        </div>
+        {% if designers %}
+        <div class="table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nama</th>
+                        <th>Spesialis</th>
+                        <th>Email</th>
+                        <th>Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in designers %}
+                    <tr>
+                        <td>{{ d['id'] }}</td>
+                        <td class="fw-600">{{ d['nama'] }}</td>
+                        <td>{{ d.get('spesialis', '-') }}</td>
+                        <td>{{ d.get('email', '-') }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_designer', designer_id=d['id']) }}" method="POST" onsubmit="return confirm('Hapus desainer {{ d['nama'] }}?')">
+                                <button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-paint-brush"></i>
+            <p>Belum ada desainer.</p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<!-- Modal Klien -->
+<div class="modal-overlay" id="clientModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus-circle"></i> Tambah Klien Baru</h3>
+            <button class="modal-close" onclick="closeModal('clientModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_client') }}" method="POST">
+            <input type="text" name="nama" placeholder="Nama Klien" required class="form-input" />
+            <input type="text" name="perusahaan" placeholder="Perusahaan" class="form-input" />
+            <input type="email" name="email" placeholder="Email" class="form-input" />
+            <input type="text" name="telepon" placeholder="Telepon" class="form-input" />
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('clientModal')" style="margin-right: 8px;">Batal</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Klien</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Desainer -->
+<div class="modal-overlay" id="designerModal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <h3><i class="fas fa-plus-circle"></i> Tambah Desainer Baru</h3>
+            <button class="modal-close" onclick="closeModal('designerModal')">&times;</button>
+        </div>
+        <form action="{{ url_for('add_designer') }}" method="POST">
+            <input type="text" name="nama" placeholder="Nama Desainer" required class="form-input" />
+            <input type="text" name="spesialis" placeholder="Spesialis (contoh: Social Media)" class="form-input" />
+            <input type="email" name="email" placeholder="Email" class="form-input" />
+            <div style="text-align: right; margin-top: 20px;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('designerModal')" style="margin-right: 8px;">Batal</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan Desainer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Tab functionality
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+            content.style.display = 'none';
+        });
+        
+        event.currentTarget.classList.add('active');
+        const activeContent = document.getElementById('tab-' + tabId);
+        if (activeContent) {
+            activeContent.classList.add('active');
+            activeContent.style.display = 'block';
+        }
+    }
+    
+    // Set initial display for tabs (if not defined in CSS)
+    document.querySelectorAll('.tab-content').forEach(c => {
+        if (!c.classList.contains('active')) c.style.display = 'none';
+        else c.style.display = 'block';
+    });
+
+    // Modal functionality
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    // Close modal when clicking outside
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('active');
+            }
+        });
+    });
+</script>
+{% endblock %}

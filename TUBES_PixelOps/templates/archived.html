@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Arsip Project{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-archive"></i> Arsip Project</h1>
+    <p class="page-subtitle">Project yang sudah selesai</p>
+</div>
+
+<div class="filter-bar">
+    <div class="filter-group">
+        <label>Filter Tipe</label>
+        <select id="filterJenis" class="form-select" onchange="filterArchived()">
+            <option value="">Semua Tipe</option>
+            {% set jenis_set = [] %}
+            {% for p in archived %}
+            {% if p['jenis'] not in jenis_set %}{% set _ = jenis_set.append(p['jenis']) %}{% endif %}
+            {% endfor %}
+            {% for j in jenis_set %}
+            <option value="{{ j|lower }}">{{ j }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+{% if archived %}
+<div class="projects-grid archived-grid">
+    {% for p in archived %}
+    {% include "_project_card.html" %}
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-check-circle"></i>
+    <p>Belum ada project yang selesai.</p>
+</div>
+{% endif %}
+
+<script>
+function filterArchived() {
+    const jenis = document.getElementById('filterJenis').value.toLowerCase();
+    document.querySelectorAll('.project-card').forEach(card => {
+        const j = card.querySelector('.project-detail:nth-child(2) span')?.textContent?.replace('Type:','').trim().toLowerCase() || '';
+        card.style.display = !jenis || j.includes(jenis) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}
